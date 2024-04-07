@@ -1,0 +1,272 @@
+options:
+  parameters:
+    author: ''
+    catch_exceptions: 'True'
+    category: '[GRC Hier Blocks]'
+    cmake_opt: ''
+    comment: ''
+    copyright: ''
+    description: ''
+    gen_cmake: 'On'
+    gen_linking: dynamic
+    generate_options: qt_gui
+    hier_block_src_path: '.:'
+    id: tinygs_rx
+    max_nouts: '0'
+    output_language: python
+    placement: (0,0)
+    qt_qss_theme: ''
+    realtime_scheduling: ''
+    run: 'True'
+    run_command: '{python} -u {filename}'
+    run_options: prompt
+    sizing_mode: fixed
+    thread_safe_setters: ''
+    title: Not titled yet
+    window_size: (1000,1000)
+  states:
+    bus_sink: false
+    bus_source: false
+    bus_structure: null
+    coordinate: [8, 8]
+    rotation: 0
+    state: enabled
+
+blocks:
+- name: center_freq
+  id: variable
+  parameters:
+    comment: ''
+    value: 433.3e6
+  states:
+    bus_sink: false
+    bus_source: false
+    bus_structure: null
+    coordinate: [352, 52.0]
+    rotation: 0
+    state: enabled
+- name: lora_bw
+  id: variable
+  parameters:
+    comment: ''
+    value: 250e3
+  states:
+    bus_sink: false
+    bus_source: false
+    bus_structure: null
+    coordinate: [440, 148.0]
+    rotation: 0
+    state: enabled
+- name: lora_cr
+  id: variable
+  parameters:
+    comment: ''
+    value: '5'
+  states:
+    bus_sink: false
+    bus_source: false
+    bus_structure: null
+    coordinate: [176, 188.0]
+    rotation: 0
+    state: enabled
+- name: lora_sf
+  id: variable
+  parameters:
+    comment: ''
+    value: '8'
+  states:
+    bus_sink: false
+    bus_source: false
+    bus_structure: null
+    coordinate: [344, 132.0]
+    rotation: 0
+    state: enabled
+- name: offset
+  id: variable
+  parameters:
+    comment: ''
+    value: 0.7e6
+  states:
+    bus_sink: false
+    bus_source: false
+    bus_structure: null
+    coordinate: [512, 60.0]
+    rotation: 0
+    state: enabled
+- name: samp_rate
+  id: variable
+  parameters:
+    comment: ''
+    value: 2.5e6
+  states:
+    bus_sink: false
+    bus_source: false
+    bus_structure: null
+    coordinate: [184, 12]
+    rotation: 0
+    state: enabled
+- name: lora_lora_receiver_0
+  id: lora_lora_receiver
+  parameters:
+    affinity: ''
+    alias: ''
+    bandwidth: int(lora_bw)
+    center_freq: center_freq + offset
+    channel_list: '[center_freq]'
+    comment: ''
+    conj: 'False'
+    cr: lora_cr-4
+    crc: 'True'
+    decimation: '1'
+    disable_channelization: 'False'
+    disable_drift_correction: 'False'
+    implicit: 'False'
+    maxoutbuf: '0'
+    minoutbuf: '0'
+    reduced_rate: 'False'
+    samp_rate: samp_rate
+    sf: lora_sf
+  states:
+    bus_sink: false
+    bus_source: false
+    bus_structure: null
+    coordinate: [688, 268.0]
+    rotation: 0
+    state: enabled
+- name: lora_message_file_sink_0
+  id: lora_message_file_sink
+  parameters:
+    affinity: ''
+    alias: ''
+    comment: ''
+    path: /home/dragon/Documents/tiny-gs/lora_test.txt
+  states:
+    bus_sink: false
+    bus_source: false
+    bus_structure: null
+    coordinate: [1040, 512.0]
+    rotation: 0
+    state: disabled
+- name: lora_message_socket_sink_0
+  id: lora_message_socket_sink
+  parameters:
+    affinity: ''
+    alias: ''
+    comment: ''
+    ip: 127.0.0.1
+    layer: '0'
+    port: '40868'
+  states:
+    bus_sink: false
+    bus_source: false
+    bus_structure: null
+    coordinate: [1048, 392.0]
+    rotation: 0
+    state: enabled
+- name: qtgui_sink_x_0
+  id: qtgui_sink_x
+  parameters:
+    affinity: ''
+    alias: ''
+    bw: samp_rate
+    comment: ''
+    fc: '0'
+    fftsize: '1024'
+    gui_hint: ''
+    maxoutbuf: '0'
+    minoutbuf: '0'
+    name: '""'
+    plotconst: 'True'
+    plotfreq: 'True'
+    plottime: 'True'
+    plotwaterfall: 'True'
+    rate: '10'
+    showports: 'False'
+    showrf: 'False'
+    type: complex
+    wintype: window.WIN_BLACKMAN_hARRIS
+  states:
+    bus_sink: false
+    bus_source: false
+    bus_structure: null
+    coordinate: [656, 132.0]
+    rotation: 0
+    state: disabled
+- name: soapy_airspyhf_source_0
+  id: soapy_airspyhf_source
+  parameters:
+    affinity: ''
+    agc: 'False'
+    alias: ''
+    center_freq: center_freq + offset
+    comment: ''
+    dev_args: airspy=0
+    freq_correction: '0'
+    gain: '-24'
+    lna: 'False'
+    maxoutbuf: '0'
+    minoutbuf: '0'
+    samp_rate: samp_rate
+    type: fc32
+  states:
+    bus_sink: false
+    bus_source: false
+    bus_structure: null
+    coordinate: [272, 300.0]
+    rotation: 0
+    state: disabled
+- name: soapy_custom_source_0
+  id: soapy_custom_source
+  parameters:
+    affinity: ''
+    agc0: 'False'
+    agc1: 'False'
+    alias: ''
+    antenna0: RX
+    antenna1: ''
+    bandwidth0: '0'
+    bandwidth1: '0'
+    center_freq0: center_freq + offset
+    center_freq1: '0'
+    comment: ''
+    dc_offset0: '0'
+    dc_offset1: '0'
+    dc_removal0: 'False'
+    dc_removal1: 'True'
+    dev_args: ''
+    driver: airspy
+    freq_correction0: '0'
+    freq_correction1: '0'
+    gain0: '20'
+    gain1: '0'
+    iq_balance0: '0'
+    iq_balance1: '0'
+    maxoutbuf: '0'
+    minoutbuf: '0'
+    nchan: '1'
+    samp_rate: samp_rate
+    settings0: ''
+    settings1: ''
+    stream_args: ''
+    tune_args0: ''
+    tune_args1: ''
+    type: fc32
+  states:
+    bus_sink: false
+    bus_source: false
+    bus_structure: null
+    coordinate: [176, 420.0]
+    rotation: 0
+    state: true
+
+connections:
+- [lora_lora_receiver_0, frames, lora_message_file_sink_0, in]
+- [lora_lora_receiver_0, frames, lora_message_socket_sink_0, in]
+- [soapy_airspyhf_source_0, '0', lora_lora_receiver_0, '0']
+- [soapy_airspyhf_source_0, '0', qtgui_sink_x_0, '0']
+- [soapy_custom_source_0, '0', lora_lora_receiver_0, '0']
+- [soapy_custom_source_0, '0', qtgui_sink_x_0, '0']
+
+metadata:
+  file_format: 1
+  grc_version: 3.10.4.0
