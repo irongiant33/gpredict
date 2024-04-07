@@ -21,6 +21,17 @@
 #include <glib/gi18n.h>
 #include <goocanvas.h>
 
+//additional libraries
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <unistd.h>
+#include <arpa/inet.h>
+#include <sys/socket.h>
+
+#define SERVER_IP "127.0.0.1"
+#define SERVER_PORT 5555
+
 #ifdef HAVE_CONFIG_H
 #include <build-config.h>
 #endif
@@ -1179,6 +1190,48 @@ static void update_sat(gpointer key, gpointer value, gpointer data)
 
             /* update label */
             g_object_set(obj->label, "text", sat->nickname, NULL);
+            
+            /* hacked code start */
+            int sockfd;
+            struct sockaddr_in server_addr;
+            char message[100];
+
+            // create socket
+            if((sockfd = socket(AF_INET, SOCK_STREAM, 0)) < 0){
+                perror("Socket creation failed!");
+                exit(1);
+            }
+
+            // initialize server address struct
+            memset(&server_addr, 0, sizeof(server_addr));
+            server_addr.sin_family = AF_INET;
+            server_addr.sin_port = htons(SERVER_PORT);
+
+            //convert ip address to binary
+            if(inet_pton(AF_INET, SERVER_IP, &server_addr.sin_addr) <= 0){
+                perror("Connection failed!");
+                exit(1);
+            }
+
+            //connect to server
+            if(connect(sockfd, (struct sockaddr*)&server_addr, sizeof(server_addr)) < 0){
+                perror("connection failed!");
+                exit(1);
+            }
+
+            //connected to server, send message
+            memcpy(message, sat->nickname, strnlen(sat->nickname, 99));
+            ssize_t num_bytes_sent = send(sockfd, message, strnlen(message, 99), 0);
+
+            close(sockfd);
+
+            if(num_bytes_sent < 0){
+                perror("error sending message");
+            }
+            else{
+                printf("%s\n%d\n", message, num_bytes_sent);
+            }
+            /* end hacked code */
 
             /* update tooltip */
             tooltip = g_markup_printf_escaped("<b>%s</b>\n"
