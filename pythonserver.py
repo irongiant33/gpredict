@@ -1,6 +1,7 @@
 # general imports
 import time
 import bisect
+import sys
 
 # network imports
 import socket
@@ -23,7 +24,7 @@ SERVER_PORT_LORA = 40868
 DEFAULT_SATELLITE = "ISM_433"
 RECENTLY_SEEN = 300 # in the last 5 minutes
 satellite_db = {
-    "Norby":{"freq":436.703e6, "sf":10, "cr":5, "bw":250e3, "last_seen":1712504745, "num_timeouts":0},
+    "Norbi":{"freq":436.703e6, "sf":10, "cr":5, "bw":250e3, "last_seen":1712504745, "num_timeouts":0},
     "Norby-2":{"freq":436.703e6, "sf":10, "cr":5, "bw":250e3, "last_seen":1712504745, "num_timeouts":0},
     "Polytech_Universe-3":{"freq":436.55e6, "sf":8, "cr":6, "bw":62.5e3, "last_seen":1712504745, "num_timeouts":0},
     "CSTP-1.1":{"freq":436.075e6, "sf":8, "cr":6, "bw":62.5e3, "last_seen":1712504745, "num_timeouts":0},
@@ -40,23 +41,23 @@ satellite_db = {
     "GaoFen-13":{"freq":400.45e6, "sf":9, "cr":5, "bw":500e3, "last_seen":1712504745, "num_timeouts":0},
     "GaoFen17":{"freq":400.45e6, "sf":9, "cr":5, "bw":500e3, "last_seen":1712504745, "num_timeouts":0},
     "GaoFen19":{"freq":400.45e6, "sf":9, "cr":5, "bw":500e3, "last_seen":1712504745, "num_timeouts":0},
-    "TIANQI-24":{"freq":400.45e6, "sf":9, "cr":5, "bw":500e3, "last_seen":1712504745, "num_timeouts":0},
-    "TIANQI-23":{"freq":400.45e6, "sf":9, "cr":5, "bw":500e3, "last_seen":1712504745, "num_timeouts":0},
-    "TIANQI-22":{"freq":400.45e6, "sf":9, "cr":5, "bw":500e3, "last_seen":1712504745, "num_timeouts":0},
-    "TIANQI-21":{"freq":400.45e6, "sf":9, "cr":5, "bw":500e3, "last_seen":1712504745, "num_timeouts":0},
+    "GaoFen-24":{"freq":400.45e6, "sf":9, "cr":5, "bw":500e3, "last_seen":1712504745, "num_timeouts":0},
+    "GaoFen-23":{"freq":400.45e6, "sf":9, "cr":5, "bw":500e3, "last_seen":1712504745, "num_timeouts":0},
+    "GaoFen-22":{"freq":400.45e6, "sf":9, "cr":5, "bw":500e3, "last_seen":1712504745, "num_timeouts":0},
+    "GaoFen-21":{"freq":400.45e6, "sf":9, "cr":5, "bw":500e3, "last_seen":1712504745, "num_timeouts":0},
     "ReshUCube-2":{"freq":436e6, "sf":7, "cr":5, "bw":125e3, "last_seen":1712504745, "num_timeouts":0},
-    "TIANQI-219":{"freq":400.45e6, "sf":9, "cr":5, "bw":500e3, "last_seen":1712504745, "num_timeouts":0},
-    "PY4-1":{"last_seen":1712504745, "num_timeouts":999999999},
-    "PY4-2":{"last_seen":1712504745, "num_timeouts":999999999},
-    "PY4-3":{"last_seen":1712504745, "num_timeouts":999999999},
-    "PY4-4":{"last_seen":1712504745, "num_timeouts":999999999},
+    "GaoFen-219":{"freq":400.45e6, "sf":9, "cr":5, "bw":500e3, "last_seen":1712504745, "num_timeouts":0},
+    #"PY4-1":{"last_seen":1712504745, "num_timeouts":999999999},
+    #"PY4-2":{"last_seen":1712504745, "num_timeouts":999999999},
+    #"PY4-3":{"last_seen":1712504745, "num_timeouts":999999999},
+    #"PY4-4":{"last_seen":1712504745, "num_timeouts":999999999},
     "ONDOSAT-OWL-1":{"freq":435e6, "sf":10, "cr":5, "bw":250e3, "last_seen":1712504745, "num_timeouts":0},
     "ONDOSAT-OWL-2":{"freq":435e6, "sf":10, "cr":5, "bw":250e3, "last_seen":1712504745, "num_timeouts":0},
-    "Platform-5":{"last_seen":1712504745, "num_timeouts":999999999},
-    "SWARM":{"last_seen":1712504745, "num_timeouts":999999999},
+    #"Platform-5":{"last_seen":1712504745, "num_timeouts":999999999},
+    #"SWARM":{"last_seen":1712504745, "num_timeouts":999999999},
     "Starlink":{"freq":137.055e6, "sf":8, "cr":5, "bw":41.7e3, "last_seen":1712504745, "num_timeouts":0},
-    "INS-2D":{"last_seen":1712504745, "num_timeouts":999999999},
-    "ISM_433":{"freq":433.3e6, "sf":8, "cr":5, "bw":250e3, "last_seen":1712504745, "num_timeouts":0}
+    #"INS-2D":{"last_seen":1712504745, "num_timeouts":999999999},
+    "ISM_433":{"freq":433.3e6, "sf":9, "cr":8, "bw":500e3, "last_seen":1712504745, "num_timeouts":0}
 }
 
 class Radio():
@@ -72,10 +73,23 @@ class Radio():
         self.center_freq = -1
         # socket parameters
         self.timeout_s = 5 # how long to wait for lora data
-        self.num_timeout_threshold = 100 # how many consecutive timeouts before switching satellites
+        self.num_timeout_threshold = 12 # how many consecutive timeouts before switching satellites
         # general data structures
         self.active_satellite = "" # changes based on satellites in view. Empty if no satellite in view.
-        self.persistent_stare = True # set to true if you only want to look at default satellite
+        self.persistent_stare = False # set to true if you only want to look at default satellite
+
+    def __str__(self):
+        print_str = f"active_satellite: {self.active_satellite}\n" + \
+                    f"persistent_stare: {self.persistent_stare}\n" + \
+                    f"time until satellite switch (seconds): {self.timeout_s * self.num_timeout_threshold}\n" + \
+                    f"lora_sf: {self.lora_sf}\n" + \
+                    f"lora_cr: {self.lora_cr}\n" + \
+                    f"lora_bw: {self.lora_bw}\n" + \
+                    f"center_freq: {self.center_freq}\n" + \
+                    f"radio gain: {self.gain}\n" + \
+                    f"offset frequency (MHz): {self.offset //1000}"
+
+        return print_str
 
     # update radio parameters based on the satellite we want to listen to
     def update_params(self, satellite_name, tb=None):
@@ -86,22 +100,24 @@ class Radio():
         self.lora_cr = satellite_info["cr"]
         self.center_freq = satellite_info["freq"]
         if(tb is not None):
+            tb.stop()
+            tb.wait()
             tb.set_lora_bw(self.lora_bw)
             tb.set_lora_sf(self.lora_sf)
             tb.set_lora_cr(self.lora_cr)
-            tb.set_center_freq(self.center_freq)
+            tb.set_center_freq(self.center_freq) # TODO: does your mod to this function from GNU Radio make sense?
             tb.start()
-            #tb.show()
         return
 
     # update which satellites are in view
     def update_satellites_in_view(self, satellite_name, tb):
         if(satellite_name in satellite_db):
             satellite_db[satellite_name]["last_seen"] = int(time.time())
-        # retune radio if there's a new satellite
-        if(not persistent_stare and not active_satellite):
-            active_satellite = satellite_name
-            self.update_params(satellite_name, tb=tb)
+            # retune radio if there's a new satellite
+            if(not self.persistent_stare and not self.active_satellite):
+                self.active_satellite = satellite_name
+                self.update_params(satellite_name, tb=tb)
+                print(f"\n{self.__str__()}\n")
         return
 
     # sorting metric for satellites
@@ -120,7 +136,7 @@ class Radio():
             timestamp = int(time.time())
             priority_list = sorted([], key=lambda satellite: self.sorting_key(satellite, timestamp), reverse=False)
             for satellite in satellite_db:
-                if(satellite == self.active_satellite or satellite_db[satellite]["num_timouts"] == 999999999):
+                if(satellite == self.active_satellite or satellite_db[satellite]["num_timeouts"] == 999999999):
                     continue
                 bisect.insort(priority_list, satellite)
             
@@ -139,9 +155,9 @@ def handle_gpredict_client(client_socket, addr, radio, tb):
     try:
         while not stop_flag:
             satellite_name = client_socket.recv(1024).decode()
-            if not message:
+            if not satellite_name:
                 break
-            print(f"updating {satellite_name}\n")
+            #print(f"updating {satellite_name}\n")
             with lock:
                 radio.update_satellites_in_view(satellite_name, tb=tb) # update the radio with current satellites
     except KeyboardInterrupt:
@@ -157,16 +173,17 @@ def handle_lora_client(server_socket, radio, tb):
         while not stop_flag:
             try:
                 data, _ = server_socket.recvfrom(1024)
-                print(f"Received from server: {data}\n")
+                print(f"Received from {DEFAULT_SATELLITE if not radio.active_satellite else radio.active_satellite}: {data}\n")
                 num_timeouts = 0
                 received_data = True
             except TimeoutError:
                 num_timeouts = num_timeouts + 1
-                if(not radio.persistent_stare and num_timeouts > radio.num_timeout_threshold):
+                print(num_timeouts, end="...")
+                sys.stdout.flush()
+                if(not radio.persistent_stare and num_timeouts > radio.num_timeout_threshold and radio.active_satellite):
+                    print()
                     with lock:
                         radio.switch_satellites(received_data) # also stops tb
-                    tb.stop()
-                    tb.wait()
                     received_data = False
                     num_timeouts = 0
                     print("no data received from satellite, switching now\n")
@@ -185,15 +202,18 @@ def main():
     server_socket_gpredict = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     server_socket_gpredict.bind((SERVER_IP, SERVER_PORT_GPREDICT))
     server_socket_gpredict.listen()
+    print(f"Listening for GPredict updates on {SERVER_IP}:{SERVER_PORT_GPREDICT}")
 
     # initialize radio parameters and start receiving
     radio = Radio()
     radio.update_params(DEFAULT_SATELLITE)
     tb = tinygs_rx_custom.tinygs_rx(radio)
+    tb.start()
     def sig_handler(sig=None, frame=None):
         tb.stop()
         tb.wait()
     signal.signal(signal.SIGTERM, sig_handler)
+    print(f"\n{radio}")
 
     # create LoRa TAP server
     server_socket_lora = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
@@ -201,6 +221,7 @@ def main():
     server_socket_lora.bind((SERVER_IP, SERVER_PORT_LORA))
     lora_thread = threading.Thread(target=handle_lora_client, args=(server_socket_lora, radio, tb))
     lora_thread.start()
+    print(f"\nListening for LoRa data on {SERVER_IP}:{SERVER_PORT_LORA}")
 
     try:
         while True:
